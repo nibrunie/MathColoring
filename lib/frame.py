@@ -2,6 +2,8 @@ import numpy as np
 import imageio
 from PIL import Image, ImageDraw
 from math import *
+from stl import mesh
+import numpy
 
 
 ## Convert color from RGB float [0.0;1.0] format
@@ -9,13 +11,8 @@ from math import *
 def get_pil_color(r = 0.0, g = 0.0, b = 0.0):
   return (int(r * 255), int(g * 255), int(b * 255))
 
-## Frame class to generate 3D Objects (such as STL description)
-class Mesh3DFrame:
-  def __init__(self):
-    pass
-
 ## Generic Frame class 
-class Frame:
+class Frame(object):
   ## draw a line of connected segments
   # @param point_list is a list of points, pair of coordinates
   # @param kw dict of extra parameters (implementation dependent)
@@ -57,6 +54,52 @@ class Frame:
   ## Save picture in an output file
   def export(self, filename):
     raise NotImplemented
+
+## Frame class to generate 3D Objects (such as STL description)
+class Mesh3DFrame(Frame):
+  def __init__(self):
+    self.point_map = {} 
+    self.faces = []
+  
+  ## draw a rectangular face, made of two triangles
+  #  around the segment [p0, p1]
+  def draw_segment(self, p0, p1, width = 5.0, z = 0.0):
+    assert p0 != p1
+    # compute n, vector orthogonal to p0, p1
+    ax,ay = p0
+    bx,by = p1
+    vx = p1[0] - p0[0]
+    vy = p1[1] - p0[1]
+    nx = -vy
+    ny = vx
+    norm = hypot(nx, ny)
+    nx, ny = (nx / norm, ny/norm)
+    # first face
+    f0 = numpy.array([
+      [ax, ay, z],
+      [bx, by, z],
+      [ax + nx, ay + ny, z]
+    ])
+    # second face
+    f1 = numpy.array([
+      [bx, by, z],
+      [ax, ay, z],
+      [bx - nx, by - ny, z]
+    ])
+    self.faces.append(f0)
+    self.faces.append(f1)
+
+
+  def export(self, filename):
+    # building mesh
+    num_faces = len(self.faces)
+    curve_mesh = mesh.Mesh(numpy.zeros(num_faces, dtype = mesh.Mesh.dtype))
+    for i, f in enumerate(self.faces):
+      for j in xrange(3):
+        curve_mesh.vectors[i][j] = numpy.array(f[j])
+    # exporting mesh to file
+    curve_mesh.save(filename)
+
 
 ## 2D-Picture Frame class
 class PictureFrame(Frame):
@@ -118,6 +161,11 @@ if __name__ == "__main__":
   polar_frame.draw_polar_curve((256, 256), formulae1, [-20 * pi, 20 * pi])
   polar_frame.export("polar.png")
   polar_frame.export("polar_curve.png")
+
+  # 3D frame
+  polar_3d = Mesh3DFrame()
+  polar_3d.draw_polar_curve((256, 256), formulae1, [-20 * pi, 20 * pi], steps = 10000)
+  polar_3d.export("polar.stl")
 
     
 
