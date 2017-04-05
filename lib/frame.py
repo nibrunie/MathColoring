@@ -60,6 +60,27 @@ class Mesh3DFrame(Frame):
   def __init__(self):
     self.point_map = {} 
     self.faces = []
+
+  def get_point_normals(self, P0, P1, z = 0.0):
+    if P0 in self.point_map:
+      return self.point_map[P0]
+    else:
+      ax,ay = P0
+      bx,by = P1
+      vx = bx - ax
+      vy = by - ay
+      nx = -vy
+      ny = vx
+      norm = hypot(nx, ny)
+      nx, ny = (nx / norm, ny/norm)
+      A = [ax, ay, z]
+      B = [bx, by, z]
+      E = [ax + nx, ay + ny, z]
+      # F = [bx + nx, by + ny, z]
+      # G = [bx - nx, by - ny, z]
+      H = [ax - nx, ay - ny, z]
+      self.point_map[P0] = E, H
+      return E, H
   
   ## draw a rectangular face, made of two triangles
   #  around the segment [p0, p1]
@@ -68,26 +89,32 @@ class Mesh3DFrame(Frame):
     # compute n, vector orthogonal to p0, p1
     ax,ay = p0
     bx,by = p1
-    vx = p1[0] - p0[0]
-    vy = p1[1] - p0[1]
+    vx = bx - ax
+    vy = by - ay
     nx = -vy
     ny = vx
     norm = hypot(nx, ny)
     nx, ny = (nx / norm, ny/norm)
+    A = [ax, ay, z]
+    B = [bx, by, z]
+    E, H = self.get_point_normals(p0, p1, z)
+    F, G = self.get_point_normals(p1, ((bx + (bx - ax)), (by - (by - ay))), z) 
     # first face
-    f0 = numpy.array([
-      [ax, ay, z],
-      [bx, by, z],
-      [ax + nx, ay + ny, z]
-    ])
+    f0 = numpy.array([A, B, E])
     # second face
-    f1 = numpy.array([
-      [bx, by, z],
-      [ax, ay, z],
-      [bx - nx, by - ny, z]
-    ])
-    self.faces.append(f0)
-    self.faces.append(f1)
+    f1 = numpy.array([E, B, F])
+    # third face
+    f2 = numpy.array([B,A,H])
+    # fourth face
+    f3 = numpy.array([B,H,G])
+    #self.faces.append(f0)
+    #self.faces.append(f1)
+    #self.faces.append(f2)
+    #self.faces.append(f3)
+    face0 = numpy.array([H, G, E])
+    face1 = numpy.array([E, G, F])
+    self.faces.append(face0)
+    self.faces.append(face1)
 
 
   def export(self, filename):
@@ -164,7 +191,7 @@ if __name__ == "__main__":
 
   # 3D frame
   polar_3d = Mesh3DFrame()
-  polar_3d.draw_polar_curve((256, 256), formulae1, [-20 * pi, 20 * pi], steps = 10000)
+  polar_3d.draw_polar_curve((0, 0), formulae1, [-20 * pi, 20 * pi], steps = 100000)
   polar_3d.export("polar.stl")
 
     
