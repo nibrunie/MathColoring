@@ -4,7 +4,7 @@ import sys
 import argparse
 from math import *
 
-from lib.export import Frame
+from lib.frame import PictureFrame
 
 id_func = lambda t: t
 
@@ -25,7 +25,7 @@ parser.add_argument("--output", action = "store", dest = "output", default = "mo
 
 
 def generate_cartesian_curve(args, filename = "mod.jpg"):
-  mod_frame = Frame(args.size, args.size)
+  mod_frame = PictureFrame(args.size, args.size)
   mod_frame.fill(1, 1, 1)
 
   mod_frame.draw_polar_curve(args.offset, args.polar_func, angle_range = range(args.span), steps = args.steps)

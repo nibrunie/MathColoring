@@ -4,7 +4,7 @@ import sys
 import argparse
 from math import cos, sin, tan, atan, atan2, pi
 
-from lib.export import Frame
+from lib.frame import PictureFrame
 
 
 parser = argparse.ArgumentParser(description='Using Math to generate drawings.')
@@ -17,7 +17,7 @@ parser.add_argument("--output", action = "store", dest = "output", default = "mo
 
 
 def generate_modulo(args, filename = "mod.jpg"):
-  mod_frame = Frame(args.size, args.size)
+  mod_frame = PictureFrame(args.size, args.size)
   mod_frame.fill(1, 1, 1)
   c_xy = args.size / 2
   mod_frame.draw_circle(c_xy, c_xy, args.radius, (0, 0, 0))
@@ -37,7 +37,7 @@ def generate_modulo(args, filename = "mod.jpg"):
     value = args.mult * i
     start_p = get_mod_circle_point(i, args.modulo)
     next_p = get_mod_circle_point(value, args.modulo)
-    mod_frame.draw_line(start_p, next_p)
+    mod_frame.draw_segment(start_p, next_p)
 
   mod_frame.export(filename)
 
